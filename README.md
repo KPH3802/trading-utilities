@@ -57,17 +57,6 @@ python3 trading_query.py
 
 ## Related Projects
 
-These utilities support the main analysis tools in my other repos:
-- [congress-trade-tracker](https://github.com/KPH3802/congress-trade-tracker) — Congressional stock trade analysis
-- [form4-insider-scanner](https://github.com/KPH3802/form4-insider-scanner) — SEC Form 4 insider trading detection
-- [options-volume-scanner](https://github.com/KPH3802/options-volume-scanner) — Options volume anomaly detection
-- [natural-gas-weather-signals](https://github.com/KPH3802/natural-gas-weather-signals) — NG storage prediction
-- [volatility-scanner](https://github.com/KPH3802/volatility-scanner) — HV/IV analysis
-
----
-
-## Related Projects
-
 This is part of a suite of quantitative research tools:
 
 - [congress-trade-tracker](https://github.com/KPH3802/congress-trade-tracker) — Automated congressional stock trade tracking with 10 detection algorithms and 46K+ backtested signals
