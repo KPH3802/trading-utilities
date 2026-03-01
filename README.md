@@ -66,6 +66,25 @@ These utilities support the main analysis tools in my other repos:
 
 ---
 
+## Related Projects
+
+This is part of a suite of quantitative research tools:
+
+- [congress-trade-tracker](https://github.com/KPH3802/congress-trade-tracker) — Automated congressional stock trade tracking with 10 detection algorithms and 46K+ backtested signals
+- [form4-insider-scanner](https://github.com/KPH3802/form4-insider-scanner) — SEC Form 4 insider transaction detection with cluster scoring and cross-signal enrichment
+- [options-volume-scanner](https://github.com/KPH3802/options-volume-scanner) — Unusual options volume detection across S&P 500 stocks
+- [volatility-scanner](https://github.com/KPH3802/volatility-scanner) — IV rank, HV patterns, and term structure tracking across 500+ instruments
+- [natural-gas-weather-signals](https://github.com/KPH3802/natural-gas-weather-signals) — Weather-driven natural gas storage modeling and trading signals
+
+---
+
+## Connect
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-kevin--heaney-blue?logo=linkedin)](https://www.linkedin.com/in/kevin-heaney/)
+[![Medium](https://img.shields.io/badge/Medium-@KPH3802-black?logo=medium)](https://medium.com/@KPH3802)
+
+---
+
 ## License
 
 MIT
