@@ -139,39 +139,39 @@ def prefetch(tickers, start='2024-12-15', end='2026-04-05'):
                     _px[tkr] = pd.Series(dtype=float)
 # ── Signal 1: 8-K Item 1.01 SHORT ──────────────────────────────────────────
 def run_8k(start, end, period_end):
-    """8-K Item 1.01 shorts. SHORT, 5-day hold. Price >= $50, SIC exclusions.
-    DATA LIMITATION: Filing DB ends Feb 13 2026. Gap Feb 14 - Mar 30 2026."""
-    db = os.path.join(BASE, 'eight_k_research', 'eight_k_filings.db')
+    """8-K Item 1.01 shorts. SHORT, 5-day hold.
+    Uses backtest_results_v2.db which has pre-computed returns with all filters applied:
+    price >= $50, SIC exclusions, M&A filter. Pre-computed returns are more accurate
+    than estimating from yfinance. DATA LIMITATION: DB ends Feb 13 2026."""
+    db = os.path.join(BASE, 'eight_k_research', 'backtest_results_v2.db')
     conn = sqlite3.connect(db)
     try:
         df = pd.read_sql_query("""
-            SELECT DISTINCT f.accession_number, c.ticker, f.filing_date
-            FROM filings f
-            JOIN filing_items fi ON fi.accession_number = f.accession_number
-            LEFT JOIN companies c ON c.cik = f.cik
-            WHERE fi.item_code='1.01'
-              AND f.filing_date >= '""" + start + """' AND f.filing_date <= '""" + end + """'
-            ORDER BY f.filing_date
+            SELECT ticker, filing_date, ret_5d, abnret_5d, mkt_ret_5d, filing_price
+            FROM filing_returns
+            WHERE item_code = '1.01'
+              AND filing_date >= '""" + start + """' AND filing_date <= '""" + end + """'
+              AND ret_5d IS NOT NULL
+              AND filing_price >= 50
+            ORDER BY filing_date
         """, conn)
     except Exception as e:
         conn.close()
         return [], str(e)
     conn.close()
     if df.empty:
-        return [], 'No signals in period'
-    tickers = [t for t in df['ticker'].dropna().unique() if isinstance(t, str) and len(t) <= 10]
-    print('prefetching ' + str(len(tickers)) + ' 8K tickers...', end=' ', flush=True)
-    prefetch(tickers)
+        return [], 'No signals in period (check backtest DB date range)'
     trades = []
-    seen = set()
     for _, row in df.iterrows():
-        ticker = row.get('ticker')
-        if not ticker or not isinstance(ticker, str) or ticker in seen:
-            continue
-        seen.add(ticker)
-        t = trade_return(str(ticker), row['filing_date'], 5, 'SHORT', period_end)
-        if t:
-            trades.append(t)
+        # SHORT: our return = -ret_5d, our alpha = -abnret_5d
+        ret = -float(row['ret_5d'])
+        alpha = -float(row['abnret_5d'])
+        spy = float(row['mkt_ret_5d']) if row['mkt_ret_5d'] is not None else 0.0
+        trades.append({
+            'ret': ret, 'spy': spy, 'alpha': alpha,
+            'win': ret > 0, 'direction': 'SHORT',
+            'entry_dt': row['filing_date'], 'exit_dt': '', 'capped': False
+        })
     return trades, None
 
 # ── Signal 2: PEAD ──────────────────────────────────────────────────────────
@@ -249,7 +249,7 @@ def run_cot(start, end, period_end):
     conn = sqlite3.connect(db)
     try:
         df = pd.read_sql_query("""
-            SELECT report_date, commodity, net_commercial, net_speculator
+            SELECT report_date, commodity, net_commercial
             FROM cot_data
             WHERE report_date >= '2022-01-01'
             ORDER BY report_date
@@ -264,7 +264,7 @@ def run_cot(start, end, period_end):
     COMMODITY_MAP = {
         'WTI Crude Oil': ('XOP', 'USO', 65, 40),
         'Gold':          ('GLD', 'GLD', 40, 40),
-        'Wheat':         ('WEAT','WEAT',40, 40),
+        'Wheat (SRW)':   ('WEAT','WEAT',40, 40),
         'Corn':          ('CORN','CORN',65, 65),
     }
     LOOKBACK = 156
