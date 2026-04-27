@@ -40,6 +40,9 @@ Simulates Event Alpha sleeve performance under varying MAX_TOTAL_OPEN cap values
 ### Layer C Heartbeat (`layer_c_heartbeat.py`)
 Out-of-band scanner health watchdog. Pings Healthchecks.io hourly with freshness checks across signal_log, 5 macro DBs, and 4 cron logs. Fails (and pages via Pushover + email) when any source falls outside its weekday-aware SLA. Three-state alerting: success, fail, no-ping (Healthchecks.io alerts after 90 min grace). Production cron: hourly via crontab.
 
+### Scanner Health Monitor (`scanner_health_monitor.py`)
+Two-layer execution monitor that catches scanner failures before they cause silent alpha loss. **L1** iterates every enabled PythonAnywhere scheduled task, fetches its log via the PA Files API, and parses the most recent `Completed task ... return code was X` line — alerts fire when return code != 0 or no completion within 90 minutes of expected fire time. **L2** queries `signal_intelligence.db` for `MAX(scan_date)` per scanner and flags drift past the expected weekday-daily / weekly-Tuesday cadence; scanners that should write but produce zero rows (e.g. `DIV_INITIATION`) surface here too. Alerts route through the Layer A Pushover wrapper, are deduplicated within a rolling 6-hour window via `~/.gmc_health_state.json`, and three or more concurrent failures collapse into one `[CRITICAL][GMC]` bundle. Script exits 0 unconditionally so cron stays green. Production cron: every 30 minutes via `~/run_scanner_health_monitor.sh`.
+
 ---
 
 ## Setup
