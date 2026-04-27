@@ -34,6 +34,12 @@ Pulls daily short volume data from Fintel API. Tracks short interest trends for 
 ### Trading Query Interface (`trading_query.py`)
 Unified query tool that connects to all trading databases from one place. Interactive menu mode or direct SQL mode for ad-hoc analysis.
 
+### H2 Capital Simulation (`h2_cap_simulation.py`)
+Simulates Event Alpha sleeve performance under varying MAX_TOTAL_OPEN cap values (20, 25, 30, 40) and pre/post Followup #3 timing fix. Uses historical signal_log + signal_benchmarks to estimate capture rates and capital-attributable alpha leak. Output feeds the H2 cap-attributable alpha leak memo. Run as one-off analysis, not scheduled.
+
+### Layer C Heartbeat (`layer_c_heartbeat.py`)
+Out-of-band scanner health watchdog. Pings Healthchecks.io hourly with freshness checks across signal_log, 5 macro DBs, and 4 cron logs. Fails (and pages via Pushover + email) when any source falls outside its weekday-aware SLA. Three-state alerting: success, fail, no-ping (Healthchecks.io alerts after 90 min grace). Production cron: hourly via crontab.
+
 ---
 
 ## Setup
