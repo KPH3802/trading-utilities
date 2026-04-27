@@ -6,3 +6,4 @@ __pycache__/
 .env
 config.py
 .DS_Store
+*.log
