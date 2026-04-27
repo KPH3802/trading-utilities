@@ -38,6 +38,7 @@ import config  # noqa: E402
 
 MAC_DB = Path("/Users/kevinheaney/gmc_data/signal_intelligence.db")
 ARCHIVE_DIR = Path("/Users/kevinheaney/gmc_data/archives/signal_intelligence")
+SUCCESS_TOUCH = Path.home() / ".gmc_signal_sync_last_success"
 PA_URL = (
     f"https://www.pythonanywhere.com/api/v0/user/{config.PA_USERNAME}"
     f"/files/path/home/{config.PA_USERNAME}/signal_intelligence.db"
@@ -439,6 +440,10 @@ def main() -> int:
 
     emit("RESULT: SUCCESS")
     emit(f"Log: {LOG_PATH}")
+    try:
+        SUCCESS_TOUCH.touch()
+    except Exception as e:
+        emit(f"WARN: success-touch failed: {e}")
     return 0
 
 
