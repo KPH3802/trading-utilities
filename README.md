@@ -37,11 +37,23 @@ Unified query tool that connects to all trading databases from one place. Intera
 ### H2 Capital Simulation (`h2_cap_simulation.py`)
 Simulates Event Alpha sleeve performance under varying MAX_TOTAL_OPEN cap values (20, 25, 30, 40) and pre/post Followup #3 timing fix. Uses historical signal_log + signal_benchmarks to estimate capture rates and capital-attributable alpha leak. Output feeds the H2 cap-attributable alpha leak memo. Run as one-off analysis, not scheduled.
 
+### YTD Performance Report (`ytd_performance_report.py`)
+Generates dollar-P&L and win-rate breakdowns per signal source across three configurable periods (YTD 2026, 2025+, Full 2025). Pulls historical signal fires, applies $5K equal-weight position sizing, and prices each entry/exit via yfinance with cached price series. Outputs per-signal performance tables and summary statistics. Run as one-off analysis when reviewing fund or signal-level results.
+
+### Transfer Coefficient Measurement (`measure_tc.py`)
+Computes the GMC Transfer Coefficient per Clarke-de Silva-Thorley (2002), Eq 7 / A15 — the cross-sectional correlation between intended trade weights times sigma and forecast alpha divided by sigma squared. Calculates daily TC since fund inception, a pooled aggregate, and a counterfactual TC assuming no MAX_TOTAL_OPEN cap (used to size capital-attributable alpha leak). Also persists daily 60-day annualized sigma per ticker to `signal_intelligence.db::ticker_sigma_history` so the time series accumulates. Standalone, on-demand.
+
+### Capital Simulation (`capital_simulation.py`)
+Simulates portfolio P&L under varying capital and position-count assumptions (current default: $50K capital, $5K per position, 10 max simultaneous). Uses signal priority queue (8K > PEAD > 13F > COT > SI > CEL) to resolve cap-bound entry conflicts. 8K returns sourced from `backtest_results_v2.db`; all other signals priced live via yfinance. Run as one-off analysis. Currently staged — full simulation pending build-out for the $5K / 1-position single-sleeve scenario.
+
 ### Layer C Heartbeat (`layer_c_heartbeat.py`)
 Out-of-band scanner health watchdog. Pings Healthchecks.io hourly with freshness checks across signal_log, 5 macro DBs, and 4 cron logs. Fails (and pages via Pushover + email) when any source falls outside its weekday-aware SLA. Three-state alerting: success, fail, no-ping (Healthchecks.io alerts after 90 min grace). Production cron: hourly via crontab.
 
 ### Scanner Health Monitor (`scanner_health_monitor.py`)
 Two-layer execution monitor that catches scanner failures before they cause silent alpha loss. **L1** iterates every enabled PythonAnywhere scheduled task, fetches its log via the PA Files API, and parses the most recent `Completed task ... return code was X` line — alerts fire when return code != 0 or no completion within 90 minutes of expected fire time. **L2** queries `signal_intelligence.db` for `MAX(scan_date)` per scanner and flags drift past the expected weekday-daily / weekly-Tuesday cadence; scanners that should write but produce zero rows (e.g. `DIV_INITIATION`) surface here too. Alerts route through the Layer A Pushover wrapper, are deduplicated within a rolling 6-hour window via `~/.gmc_health_state.json`, and three or more concurrent failures collapse into one `[CRITICAL][GMC]` bundle. Script exits 0 unconditionally so cron stays green. Production cron: every 30 minutes via `~/run_scanner_health_monitor.
+
+### Signal Intelligence Setup (`signal_intelligence_setup.py`)
+One-time bootstrap that creates `~/gmc_data/signal_intelligence.db` and backfills historical signal data from every backtest DB in the suite (PEAD, SI, COT, CEL, 13F, 8K, DIV_CUT). This is the permanent signal archive — all future scanner runs append to it. Supports `--verify` mode to print summary statistics without inserting. Run once at fund setup or when rebuilding the signal archive from scratch.
 
 ### PA to Mac Signal Sync (sync_signal_intelligence.py)
 Nightly consolidator that pulls PythonAnywhere's signal_intelligence.db and merges new rows into Mac Studio's local copy. Uses the PA Files API with atomic stage-and-merge so the live local DB is never half-written. Reports per-scanner fire counts and surfaces zero-fire scanners (a passive form of signal health monitoring). Production cron: 06:15 CT weekdays via ~/run_sync_signal_intelligence.sh.
