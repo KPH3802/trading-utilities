@@ -41,7 +41,7 @@ import config  # noqa: E402
 # Canonical local DB path -- derived from ib_execution/config.py FORM4_DB,
 # which is "../form4_scanner/form4_insider_trades.db" relative to ib_execution.
 LOCAL_DB = Path(
-    "/Users/kevinheaney/Desktop/Claude_Programs/Trading_Programs/form4_scanner/form4_insider_trades.db"
+    "/Users/kevinheaney/gmc_data/form4_scanner/form4_insider_trades.db"  # Apr 29 2026: relocated to ~/gmc_data/
 )
 TMP_DB = LOCAL_DB.with_suffix(LOCAL_DB.suffix + ".tmp")
 
